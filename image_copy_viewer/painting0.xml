@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <paint>
+    <stroke>
+      <point frame="10" x="100" y="100"/>
+      <point frame="10" x="300" y="100"/>
+      <point frame="10" x="300" y="300"/>
+      <point frame="10" x="100" y="300"/>
+      <point frame="10" x="100" y="100"/>
+    </stroke>
+  </paint>
+</xml>
