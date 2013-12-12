@@ -9,10 +9,12 @@ class SampleClip
   PVector vel;
   float volume[];
   
+  AudioContext ac;
   SamplePlayer sp;
   Gain gain;
   Glide rateValue;
   Glide posValue;
+  Filter currentFilter;
   
   boolean isPlaying;
   
@@ -24,6 +26,7 @@ class SampleClip
   
   public SampleClip(AudioContext ac, PlaybackLine pLine, Sample s, float st, float e)
   {
+    this.ac = ac;
     this.pLine = pLine;
     sample = s;
     start = st;
@@ -33,6 +36,8 @@ class SampleClip
     vel = new PVector(1, 0);//random(0.2, 30), 0);
     size = new PVector(length, 30);
     isPlaying = false;
+    
+    currentFilter = null;
     
     sp = new SamplePlayer(ac, sample);
     sp.setPosition(start);
@@ -102,21 +107,37 @@ class SampleClip
     translate(pos.x, pos.y);
     
     stroke(255);
-    fill(150);
-    rect(0, 0, size.x, size.y);
-    
-    stroke(50);
+    if (currentFilter == null)
+    {
+      fill(150);
+    }
+    else {
+      fill(currentFilter.c);
+    }
+//    fill(150);
+    strokeWeight(2);
+    rect(0, 0, size.x, size.y, 5, 5, 5, 5);
+
+    // draw the sample
     if (isPlaying)
     {
-      stroke(100, 255, 255);
-      line(pLine.x-pos.x, 0, pLine.x-pos.x, size.y);
+      stroke(57, 120, 255);
     }
-   
-    // draw the sample
+    else {
+      stroke(50);
+    }
+    
     for (int i=1; i<volume.length; i++)
     {
       line(i, size.y/2-volume[i]*70, i, size.y/2+volume[i]*70);
-    } 
+    }
+      
+    if (isPlaying)
+    {
+      stroke(30, 120, 255);
+      line(pLine.x-pos.x, 0, pLine.x-pos.x, size.y);
+    }
+   
     
     popMatrix();
   }
@@ -144,6 +165,35 @@ class SampleClip
     else if (pos.y < 0) {
       pos.y = 0;
       vel.y *= -1;
+    }
+  }
+  
+  public boolean contains(float x, float y)
+  {
+    if (x > pos.x && x < pos.x+size.x &&
+        y > pos.y && y < pos.y+size.y) {
+          return true;
+        }
+    else {
+      return false;
+    }
+  }
+  
+  public void applyFilter(Filter f)
+  {
+    if (f.type.equals("lowpass"))
+    {
+      OnePoleFilter filter = new OnePoleFilter(ac, f.cutFreq);
+      filter.addInput(sp);
+      gain.clearInputConnections();
+      gain.addInput(filter);
+      currentFilter = f;
+    }
+    else if (f.type.equals("none"))
+    {
+      gain.clearInputConnections();
+      gain.addInput(sp);
+      currentFilter = null;
     }
   }
 }

@@ -6,7 +6,7 @@ Capture video;
 int[] backgroundPixels;
 int[] oldBackDiff;
 PImage backDiff;
-PImage movementImg;
+//PImage movementImg;
 
 PVector pos;
 
@@ -14,44 +14,50 @@ int videoWidth = 320;
 int videoHeight = 240;
 int rightLine = videoWidth-videoWidth/4;
 int leftLine = videoWidth/4;
+int topLine = videoHeight/2;
+int bottomLine = videoHeight;
 
-Ball ball;
+VideoBox videoBox;
+
+float moveFactor = 0.45;
 
 void setup() {
-  size(640, 480);
+  size(videoWidth*3, videoHeight*3);
   
   // This the default video input, see the GettingStartedCapture 
   // example if it creates an error
   video = new Capture(this, videoWidth, videoHeight);
-  backDiff = new PImage(videoWidth/2, videoHeight/2, RGB);
-  movementImg = new PImage(videoWidth/2, videoHeight/2, RGB);
+  backDiff = new PImage(videoWidth, videoHeight, ALPHA);
+//  movementImg = new PImage(videoWidth, videoHeight, ALPHA);
   
   // Start capturing the images from the camera
-  video.start(); 
+  video.start();
   
   numPixels = video.width * video.height;
   // Create an array to store the previously captured frame
   backgroundPixels = new int[numPixels];
-  oldBackDiff = new int[numPixels/4];
+  oldBackDiff = new int[numPixels];
 //  loadPixels();
 
-  ball = new Ball(width/2, height-100);
+  videoBox = new VideoBox(width/2, height-100, video, backDiff);
 }
 
 void draw() {
   background(255);
   
-  // mirrot the video
-  pushMatrix();
-  scale(-1, 1);
-  image(video, -320, 0);
-  popMatrix();
+//  video.mask(backDiff);
+//
+//  // mirrot the video
+//  pushMatrix();
+//  scale(-1, 1);
+//  image(video, -videoWidth, 0);
+//  popMatrix();
   
-  image(backDiff, 320, 0);
-  image(movementImg, 480, 0);
+//  image(backDiff, videoWidth, 0);
+//  image(movementImg, videoWidth*2, 0);
   
-  ball.update();
-  ball.draw();
+  videoBox.update();
+  videoBox.draw();
 }
 
 
@@ -60,17 +66,17 @@ void captureEvent(Capture c)
   c.read();
   c.loadPixels();
   backDiff.loadPixels();
-  movementImg.loadPixels();
+//  movementImg.loadPixels();
   
   int rightMovement=0;
   int leftMovement=0;
 
-  for (int y=0; y<videoHeight; y+=2)
+  for (int y=0; y<videoHeight; y+=1)
   {
-    for (int x=0; x<videoWidth; x+=2)
+    for (int x=0; x<videoWidth; x+=1)
     {
       int i = x + y*videoWidth;
-      int ii = x/2 + (y/2)*(videoWidth/2);
+//      int ii = x/2 + (y/2)*(videoWidth/2);
       color currColor = video.pixels[i];
       color backColor = backgroundPixels[i];
       // Extract the red, green, and blue components from current pixel
@@ -88,16 +94,28 @@ void captureEvent(Capture c)
 
       int diffSum = diffR + diffG + diffB;
       
-      if (diffSum > 80) {
-        backDiff.pixels[ii] = 255;
+      // handle middle and sides
+      if (y>topLine && y<bottomLine)
+      {
+        if (diffSum > 50) {
+          backDiff.pixels[i] = 255;
+        }
+        else {
+          if (x>leftLine && x<rightLine) {
+            backDiff.pixels[i] = 255;
+          }
+          else {
+            backDiff.pixels[i] = 0;
+          }
+        }
       }
       else {
-        backDiff.pixels[ii] = 0;
+        backDiff.pixels[i] = 0;
       }
       
-      if (oldBackDiff[ii] != backDiff.pixels[ii])
+      if (oldBackDiff[i] != backDiff.pixels[i])
       {
-        movementImg.pixels[ii] = 255;
+//        movementImg.pixels[i] = 255;
         if (x < leftLine) {
           leftMovement++;
         }
@@ -106,31 +124,30 @@ void captureEvent(Capture c)
         }
       }
       else {
-        movementImg.pixels[ii] = 0;
+//        movementImg.pixels[i] = 0;
       }
       
       // save a copy ot the background subtraction      
-      oldBackDiff[ii] = backDiff.pixels[ii];
+      oldBackDiff[i] = backDiff.pixels[i];
     }
   }
 
   backDiff.updatePixels();
-  movementImg.updatePixels();
+//  movementImg.updatePixels();
   
   // handle movement
-  if (rightMovement > 200) {
+  if (rightMovement*moveFactor > 200) {
     println("right = " + rightMovement);
-    float force = map(rightMovement, 0, 500, 1, 5);
-    ball.applyForce(new PVector(force, -force*2));
+    float force = map(rightMovement*moveFactor, 0, 500, 1, 5);
+    videoBox.applyForce(new PVector(force, -force*2));
   }
   
-  if (leftMovement > 200) {
+  if (leftMovement*moveFactor > 200) {
     println("* left = " + leftMovement);    
-    float force = map(leftMovement, 0, 500, 1, 5);
-    ball.applyForce(new PVector(-force, -force*2));
+    float force = map(leftMovement*moveFactor, 0, 500, 1, 5);
+    videoBox.applyForce(new PVector(-force, -force*2));
   }
   
-//  video.mask(backDiff);
   
 }
 

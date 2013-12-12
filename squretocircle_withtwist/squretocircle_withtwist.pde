@@ -50,15 +50,15 @@ void buildModel()
   model = new UGeo();
   ArrayList<UVertexList> shape = new ArrayList<UVertexList>();
   
-  float[] sizes = {192,   102, 90, 47, 55, 27, 40, 30,  1};
-  int[] iterations =     {  15, 15, 28,  12,  15, 7, 7, 1};
-  int[] holdIterations = {  10,  1, 10,  1,   10,  1, 10,  0};
+  float[] sizes = {192,   102, 90, 47, 55, 27, 40, 30,  1};  // tweak[1,100]
+  int[] iterations =     {  15, 15, 28,  12,  15, 7, 7, 1};  // tweak[1,15]
+  int[] holdIterations = {  10,  1, 10,  1,   10,  1, 10,  0}; // tweak[1/10]
 //  float[] heightIncs = {10, 20, 7, 8, 7, 8};
 //  float[] rotations = {0.14, 0.36, 0.41, 0.30};
   
 //  float h=0;
   
-  int n=16;
+  int n=12;
   UVertexList lastElement = new UVertexList();
   for (int i=0; i<n; i++) {
     lastElement.add(new UVertex(sizes[0]/2, 0, 0).rotZ(map(i, 0, n, 0, TWO_PI)));
